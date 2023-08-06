@@ -4,7 +4,11 @@ use std::fs;
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let content: String = fs::read_to_string(config.filename)?;
     let result = search(&config.query, &content);
-    println!("Result\n:{:?}", result);
+    if result.len() == 0 {
+        println!("Query not found !");
+    } else {
+        println!("Result\n:{:?}", result);
+    }
 
     Ok(())
 }
@@ -38,6 +42,16 @@ pub fn search<'a>(query: &str, content: &'a str) -> Vec<&'a str> {
     }
     results
 }
+
+pub fn case_insensitive_check<'a>(query: &str, content: &'a str) -> Vec<&'a str> {
+    let mut result = Vec::new();
+    for line in content.lines() {
+        if line.to_lowercase().contains(&query.to_lowercase()) {
+            result.push(line.trim());
+        }
+    }
+    result
+}
 #[cfg(test)]
 
 mod test {
@@ -54,5 +68,21 @@ mod test {
         ";
 
         assert_eq!(vec!["Safe, Fast, Profuctive"], search(query, content));
+    }
+
+    #[test]
+    fn case_insensitive_test() {
+        let query = "rUsT";
+        let content = "
+        Pick three:
+        Rust:
+        Safe,  Fast, Profuctive
+        Exit
+        trust
+        ";
+        assert_eq!(
+            vec!["Rust:", "trust"],
+            case_insensitive_check(query, content)
+        );
     }
 }
